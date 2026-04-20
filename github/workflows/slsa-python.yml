@@ -2,6 +2,7 @@ name: SLSA for Python package
 on:
  push:
    branches: [main]
+  workflow_dispatch:
 
 jobs:
  build-and-provenance:
@@ -27,7 +28,7 @@ jobs:
           ls dist
 
       - name: Generate SLSA provenance
-        uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1
+        uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1.9.0
         with:
           base64-subjects: |
             $(for f in dist/*; do
