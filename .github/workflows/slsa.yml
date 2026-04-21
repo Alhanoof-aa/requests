@@ -2,7 +2,7 @@ name: SLSA Provenance for Python package
 on:
  push:
    tags:
-     - 'v*.*.*'
+     - 'v0.1.1'
 
 jobs:
  build:
