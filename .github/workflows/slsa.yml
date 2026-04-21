@@ -27,11 +27,28 @@ jobs:
 
       - name: Build package
         run: python -m build --wheel --sdist
+     outputs:
+       subjects: ${{ steps.hash.outputs.subjects}}
 
-      - name: Generate SLSA provenance
-        uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1
+     steps:
+      - name: Compute subjects
+        id: hash
+        run: |
+          subjects=""
+          for f in dist/*; do
+            digest=$(sha256sum "$f" | awk '{print $1}')
+            subjects="$subjects$digest:$(basename "$f"),"
+           done
+           subjects="${subjects%,}"
+           echo "subjects=$subjects" >> $GITHUB_OUTPUT
+           
+       provenance:
+         needs: build
+         permissions:
+           id-token: write
+           contents: read
+           actions: read
+           attestations: write
+          uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1
         with:
-          base64-subjects: |
-            $(for f in dist/*; do
-              echo -n "$(sha256sum "$f" | awk '{print $1}'):$f,"
-            done | sed 's/,$//')
+          base64-subjects: ${{ needs.build.outputs.subjects}}
