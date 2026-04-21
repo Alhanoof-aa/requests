@@ -1,0 +1,37 @@
+name: SLSA Provenance for Python package
+on:
+ push:
+   tags:
+     - 'v*.*.*'
+
+jobs:
+ build:
+    permissions:
+       id-token: write
+       contents: read
+       actions: read
+       attestations: write
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install build backend
+        run: pip install build
+
+      - name: Build package
+        run: python -m build --wheel --sdist
+
+      - name: Generate SLSA provenance
+        uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1
+        with:
+          base64-subjects: |
+            $(for f in dist/*; do
+              echo -n "$(sha256sum "$f" | awk '{print $1}'):$f,"
+            done | sed 's/,$//')
